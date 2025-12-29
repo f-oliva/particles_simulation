@@ -79,7 +79,7 @@ class Box:
 
 
 class System:
-    """High-level system for sampling particle properties.
+    """High-level system to create particle and properties.
 
     This class centralizes sampling routines used to create collections of
     particles for tests and demos. A numpy Generator can be injected to
@@ -97,18 +97,18 @@ class System:
         return np.round(x, 2)
 
     def sample_mass(self) -> float:
-        """Sample a particle mass uniformly in [0.50, 1.50) and round it."""
-        return float(self.round2(self.rng.uniform(0.50, 1.50)))
+        """Sample a particle mass uniformly in [0.20, 1.0) and round it."""
+        return float(self.round2(self.rng.uniform(0.20, 1.0)))
 
     def mass_to_radius(self, mass:float) -> float:
         """Convert mass to a radius value using a fixed scaling factor."""
-        return float(self.round2(mass * 1.5))
+        return float(self.round2(mass * 0.5))
 
     def sample_position(self) -> np.ndarray:
         """Sample and return a rounded random position inside the box."""
         return self.round2(self.box.random_position(rng=self.rng))
 
-    def sample_mb(self, mass:float, T:float) -> np.ndarray:
+    def sample_mb(self) -> np.ndarray:
         """Return a random instantaneous velocity-like vector (uniform).
 
         NOTE: Maxwell–Boltzmann sampling intentionally left as a future
@@ -135,8 +135,8 @@ class System:
             mass = self.sample_mass()
             radius = self.mass_to_radius(mass)
             position = self.sample_position()
-            velocity = self.sample_mb(mass, self.temperature)
-            acceleration = self.sample_mb(mass, self.temperature)
+            velocity = self.sample_mb()
+            acceleration = self.sample_mb()
             return Particle(position, velocity, acceleration, mass, charge, radius)
 
         for _ in range(n_pos):
