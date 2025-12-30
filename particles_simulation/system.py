@@ -124,7 +124,7 @@ class System:
         option; current approach samples uniformly in [-v_max, v_max]
         where v_max is 10% of the box size.
         """
-        v_max = float(np.max(self.box.size) * 0.30)
+        v_max = float(np.max(self.box.size) * 0.50)
         v = self.rng.uniform(-v_max, v_max, size=3)
         return self.round2(v)
 
