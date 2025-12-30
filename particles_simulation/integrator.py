@@ -26,8 +26,7 @@ class LeapFrogIntegrator:
     - particles: list of Particle instances to integrate
     - dt: timestep (float)
     - force_func: function(particle, particles) -> acceleration vector; if
-      omitted, the integrator uses `particle.acceleration` as a constant
-      acceleration (useful while interactions are not implemented).
+      omitted, the integrator assumes zero acceleration (no external forces).
     """
 
     def __init__(self, box: Box, particles: List[Particle], dt: float, force_func: Optional[ForceFunc] = None):
@@ -36,10 +35,13 @@ class LeapFrogIntegrator:
         self.box = box
         self.particles = list(particles)
         self.dt = float(dt)
-        self.force_func: ForceFunc = force_func or (lambda p, ps: p.acceleration)
+        # Default to zero acceleration if no force function is provided
+        self.force_func: ForceFunc = force_func or (lambda p, ps: np.zeros(3, dtype=float))
 
         # Initialize half-step velocities: v_{n+1/2} = v_n + 0.5 * a_n * dt
-        self.v_half: List[np.ndarray] = [np.asarray(p.velocity, dtype=float) + 0.5 * np.asarray(p.acceleration, dtype=float) * self.dt for p in self.particles]
+        # where a_n is obtained from the force function (may be zero)
+        self.v_half: List[np.ndarray] = [np.asarray(p.velocity, dtype=float) + 0.5 * np.asarray(self.force_func(p, self.particles), dtype=float) * self.dt for p in self.particles]
+
 
     def step(self, n_steps: int = 1) -> None:
         """Advance the simulation `n_steps` steps using leap-frog.
@@ -48,6 +50,15 @@ class LeapFrogIntegrator:
         placed exactly at the boundary and the corresponding velocity component
         (half-step velocity) is inverted.
         """
+
+        def detect_wall_collisions(self, p) -> bool:
+            """Detect and return list of (particle_index, axis) tuples for wall collisions."""
+            half = self.box.size / 2
+            for ax in range(3):
+                if p.position[ax]-p.radius < -half[ax] or p.position[ax]+p.radius > half[ax]:
+                    return True
+            return False
+        
         for _ in range(int(n_steps)):
             for i, p in enumerate(self.particles):
                 vh = self.v_half[i]
@@ -57,19 +68,15 @@ class LeapFrogIntegrator:
                 # Drift: advance position by v_{n+1/2} * dt
                 p.position = p.position + vh_old * self.dt
 
-                # Reflective boundaries handled here so we update v_half consistently
-                half = self.box.size / 2
-                for ax in range(3):
-                    if p.position[ax] < -half[ax]:
-                        p.position[ax] = -half[ax]
-                        vh_old[ax] = -vh_old[ax]
-                    elif p.position[ax] > half[ax]:
-                        p.position[ax] = half[ax]
-                        vh_old[ax] = -vh_old[ax]
-
-                # Compute new acceleration (force/mass). By default this returns the
-                # particle's own `acceleration` attribute which allows a simple
-                # constant-acceleration test setup.
+                # Correct geometry via the Box and invert velocities where needed
+                mask = self.box.check_and_correct(p)
+                if np.any(mask):
+                    # keep full-step velocity consistent
+                    p.velocity[mask] = -p.velocity[mask]
+                    # invert integrator's half-step velocity representation
+                    vh_old[mask] = -vh_old[mask]
+                # Compute new acceleration (force/mass) using the provided force function
+                # (defaults to zero acceleration when no forces are present).
                 a_new = np.asarray(self.force_func(p, self.particles), dtype=float)
 
                 # Kick: update half-step velocity to v_{n+3/2} = v_{n+1/2} + a_{n+1} * dt

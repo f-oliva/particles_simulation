@@ -8,7 +8,7 @@ from particles_simulation.integrator import LeapFrogIntegrator
 
 def test_leapfrog_updates_position_no_acc():
     box = Box(10.0)
-    p = Particle(position=[0.0, 0.0, 0.0], velocity=[1.0, 0.0, 0.0], acceleration=[0.0, 0.0, 0.0], mass=1.0, charge=0, radius=0.1)
+    p = Particle(position=[0.0, 0.0, 0.0], velocity=[1.0, 0.0, 0.0], mass=1.0, charge=0, radius=0.1)
     integ = LeapFrogIntegrator(box, [p], dt=0.1)
 
     integ.step()
@@ -21,23 +21,35 @@ def test_leapfrog_updates_position_no_acc():
 
 def test_leapfrog_bounces():
     box = Box(2.0)  # half-size = 1.0
-    # start near +x boundary moving outward
-    p = Particle(position=[0.95, 0.0, 0.0], velocity=[1.0, 0.0, 0.0], acceleration=[0.0, 0.0, 0.0], mass=1.0, charge=0, radius=0.1)
+    # start near +x boundary moving outward with small radius
+    p = Particle(position=[0.95, 0.0, 0.0], velocity=[1.0, 0.0, 0.0], mass=1.0, charge=0, radius=0.1)
     integ = LeapFrogIntegrator(box, [p], dt=0.1)
 
     integ.step()
 
-    # particle should be placed at the boundary and have inverted velocity
-    assert pytest.approx(p.position[0]) == 1.0
+    # corrected position should be at half - radius = 1.0 - 0.1 = 0.9 and inverted velocity
+    assert pytest.approx(p.position[0]) == 0.9
     assert pytest.approx(p.velocity[0]) == -1.0
+
+
+def test_inverts_half_velocity_on_collision():
+    box = Box(2.0)
+    p = Particle(position=[0.95, 0.0, 0.0], velocity=[1.0, 0.0, 0.0], mass=1.0, charge=0, radius=0.0)
+    integ = LeapFrogIntegrator(box, [p], dt=0.1)
+
+    vhalf0 = integ.v_half[0].copy()
+    integ.step()
+
+    # integrator should invert its half-step velocity when a collision occurs
+    assert pytest.approx(integ.v_half[0][0]) == -vhalf0[0]
 
 
 def test_reproducible_with_rng_and_multiple_particles():
     rng = default_rng(123)
     box = Box(10.0)
     # create two particles using deterministic RNG
-    p1 = Particle(position=box.random_position(rng), velocity=[0, 0, 0], acceleration=[0, 0, 0], mass=1.0, charge=0, radius=0.1)
-    p2 = Particle(position=box.random_position(rng), velocity=[0, 0, 0], acceleration=[0, 0, 0], mass=1.0, charge=0, radius=0.1)
+    p1 = Particle(position=box.random_position(rng), velocity=[0, 0, 0], mass=1.0, charge=0, radius=0.1)
+    p2 = Particle(position=box.random_position(rng), velocity=[0, 0, 0], mass=1.0, charge=0, radius=0.1)
     integ = LeapFrogIntegrator(box, [p1, p2], dt=0.05)
 
     integ.step(10)

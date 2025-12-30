@@ -20,7 +20,6 @@ class Particle:
     """
     position: np.ndarray = field(repr=True)
     velocity: np.ndarray = field(repr=True)
-    acceleration: np.ndarray = field(repr=True)
     mass: float = field(repr=True)
     charge: float = field(repr=True)
     radius: float = field(repr=True)
@@ -29,10 +28,9 @@ class Particle:
         # Convert sequence inputs to numpy arrays (shape checks for safety).
         self.position = np.asarray(self.position, dtype=float)
         self.velocity = np.asarray(self.velocity, dtype=float)
-        self.acceleration = np.asarray(self.acceleration, dtype=float)
 
-        if self.position.shape != (3,) or self.velocity.shape != (3,) or self.acceleration.shape != (3,):
-            raise ValueError("position, velocity and acceleration must be length-3 vectors")
+        if self.position.shape != (3,) or self.velocity.shape != (3,):
+            raise ValueError("position and velocity must be length-3 vectors")
 
 
 class Box:
@@ -61,21 +59,32 @@ class Box:
         half = self.size / 2
         return rng.uniform(-half, half)
 
-    def apply_reflective_boundary(self, particle: Particle) -> None:
-        """Reflect a particle at the boundary, correcting out-of-bounds pos.
+    def check_and_correct(self, particle: Particle) -> np.ndarray:
+        """Clamp a particle inside the box (accounting for its radius).
 
-        If a particle lies outside the box on a given axis, set its
-        coordinate to the boundary value and invert the corresponding
-        velocity component so the particle is placed just inside the box.
+        Returns a boolean mask of shape (3,) indicating which axes had
+        collisions and were corrected.
         """
         half = self.size / 2
+        mask = np.zeros(3, dtype=bool)
         for i in range(3):
-            if particle.position[i] < -half[i]:
-                particle.position[i] = -half[i]
-                particle.velocity[i] = -particle.velocity[i]
-            elif particle.position[i] > half[i]:
-                particle.position[i] = half[i]
-                particle.velocity[i] = -particle.velocity[i]
+            if particle.position[i] < -half[i] + particle.radius:
+                particle.position[i] = -half[i] + particle.radius
+                mask[i] = True
+            elif particle.position[i] > half[i] - particle.radius:
+                particle.position[i] = half[i] - particle.radius
+                mask[i] = True
+        return mask
+
+    def apply_reflective_boundary(self, particle: Particle) -> None:
+        """Backward-compatible helper that corrects position and inverts velocity.
+
+        This calls :meth:`check_and_correct` and flips the particle's
+        *full-step* velocity components for axes where a correction occurred.
+        """
+        mask = self.check_and_correct(particle)
+        if np.any(mask):
+            particle.velocity[mask] = -particle.velocity[mask]
 
 
 class System:
@@ -108,16 +117,30 @@ class System:
         """Sample and return a rounded random position inside the box."""
         return self.round2(self.box.random_position(rng=self.rng))
 
-    def sample_mb(self) -> np.ndarray:
+    def sample_velocity(self) -> np.ndarray:
         """Return a random instantaneous velocity-like vector (uniform).
 
         NOTE: Maxwell–Boltzmann sampling intentionally left as a future
         option; current approach samples uniformly in [-v_max, v_max]
         where v_max is 10% of the box size.
         """
-        v_max = float(np.max(self.box.size) * 0.10)
+        v_max = float(np.max(self.box.size) * 0.30)
         v = self.rng.uniform(-v_max, v_max, size=3)
         return self.round2(v)
+
+    def create_particle(self, charge:Optional[int] = None) -> Particle:
+        """Create a single Particle using the System sampling routines.
+
+        If `charge` is None, a charge is sampled randomly from {-1, 0, 1}
+        using the system RNG to keep generation reproducible.
+        """
+        if charge is None:
+            charge = int(self.rng.choice([-1, 0, 1]))
+        mass = self.sample_mass()
+        radius = self.mass_to_radius(mass)
+        position = self.sample_position()
+        velocity = self.sample_velocity()
+        return Particle(position, velocity, mass, charge, radius)
 
     def create_particles(self, n_pos:int, n_neg:int, n_neutral:int) -> List[Particle]:
         """Create a list of particles with specified charge counts.
@@ -131,20 +154,12 @@ class System:
 
         particles: List[Particle] = []
 
-        def _make_particle(charge:float) -> Particle:
-            mass = self.sample_mass()
-            radius = self.mass_to_radius(mass)
-            position = self.sample_position()
-            velocity = self.sample_mb()
-            acceleration = self.sample_mb()
-            return Particle(position, velocity, acceleration, mass, charge, radius)
-
         for _ in range(n_pos):
-            particles.append(_make_particle(charge=+1))
+            particles.append(self.create_particle(charge=+1))
         for _ in range(n_neg):
-            particles.append(_make_particle(charge=-1))
+            particles.append(self.create_particle(charge=-1))
         for _ in range(n_neutral):
-            particles.append(_make_particle(charge=0))
+            particles.append(self.create_particle(charge=0))
 
         return particles
 
