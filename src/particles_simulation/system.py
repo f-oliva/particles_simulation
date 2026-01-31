@@ -40,7 +40,7 @@ class Box:
     lengths in x,y,z. All sizes must be positive.
     """
 
-    def __init__(self, size:Union[float, Sequence[float]]):
+    def __init__(self, size: Union[float, Sequence[float]]):
         sizes = np.asarray(size, dtype=float)
         if sizes.size == 1:
             sizes = np.repeat(sizes.item(), 3)
@@ -50,7 +50,7 @@ class Box:
             raise ValueError("box sizes must be positive")
         self.size = sizes
 
-    def random_position(self, rng:Optional[Generator] = None) -> np.ndarray:
+    def random_position(self, rng: Optional[Generator] = None) -> np.ndarray:
         """Return a random 3D position uniformly inside the box.
 
         If provided, use the supplied RNG for reproducibility.
@@ -95,13 +95,13 @@ class System:
     make sampling deterministic and thread-safe for tests.
     """
 
-    def __init__(self, box: Box, temperature:float = 300.0, rng:Optional[Generator] = None):
+    def __init__(self, box: Box, temperature: float = 300.0, rng: Optional[Generator] = None):
         self.box = box
         self.temperature = float(temperature)
         # Use provided RNG for reproducibility; fall back to a new Generator.
         self.rng: Generator = rng or default_rng()
 
-    def round2(self, x):
+    def round2(self, x: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """Round numbers or arrays to two decimal places."""
         return np.round(x, 2)
 
@@ -109,7 +109,7 @@ class System:
         """Sample a particle mass uniformly in [0.20, 1.0) and round it."""
         return float(self.round2(self.rng.uniform(0.20, 1.0)))
 
-    def mass_to_radius(self, mass:float) -> float:
+    def mass_to_radius(self, mass: float) -> float:
         """Convert mass to a radius value using a fixed scaling factor."""
         return float(self.round2(mass * 0.5))
 

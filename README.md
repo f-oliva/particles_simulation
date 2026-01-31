@@ -1,85 +1,139 @@
-
-# Python Project Template
-
-A low dependency and really simple to start project template for Python Projects.
-
-See also 
-- [Flask-Project-Template](https://github.com/rochacbruno/flask-project-template/) for a full feature Flask project including database, API, admin interface, etc.
-- [FastAPI-Project-Template](https://github.com/rochacbruno/fastapi-project-template/) The base to start an openapi project featuring: SQLModel, Typer, FastAPI, JWT Token Auth, Interactive Shell, Management Commands.
-
-### HOW TO USE THIS TEMPLATE
-
-> **DO NOT FORK** this is meant to be used from **[Use this template](https://github.com/rochacbruno/python-project-template/generate)** feature.
-
-1. Click on **[Use this template](https://github.com/rochacbruno/python-project-template/generate)**
-3. Give a name to your project  
-   (e.g. `my_awesome_project` recommendation is to use all lowercase and underscores separation for repo names.)
-3. Wait until the first run of CI finishes  
-   (Github Actions will process the template and commit to your new repo)
-4. If you want [codecov](https://about.codecov.io/sign-up/) Reports and Automatic Release to [PyPI](https://pypi.org)  
-  On the new repository `settings->secrets` add your `PYPI_API_TOKEN` and `CODECOV_TOKEN` (get the tokens on respective websites)
-4. Read the file [CONTRIBUTING.md](CONTRIBUTING.md)
-5. Then clone your new project and happy coding!
-
-> **NOTE**: **WAIT** until first CI run on github actions before cloning your new project.
-
-### What is included on this template?
-
-- 🖼️ Templates for starting multiple application types:
-  * **Basic low dependency** Python program (default) [use this template](https://github.com/rochacbruno/python-project-template/generate)
-  * **Flask** with database, admin interface, restapi and authentication [use this template](https://github.com/rochacbruno/flask-project-template/generate).
-  **or Run `make init` after cloning to generate a new project based on a template.**
-- 📦 A basic [setup.py](setup.py) file to provide installation, packaging and distribution for your project.  
-  Template uses setuptools because it's the de-facto standard for Python packages, you can run `make switch-to-poetry` later if you want.
-- 🤖 A [Makefile](Makefile) with the most useful commands to install, test, lint, format and release your project.
-- 📃 Documentation structure using [mkdocs](http://www.mkdocs.org)
-- 💬 Auto generation of change log using **gitchangelog** to keep a HISTORY.md file automatically based on your commit history on every release.
-- 🐋 A simple [Containerfile](Containerfile) to build a container image for your project.  
-  `Containerfile` is a more open standard for building container images than Dockerfile, you can use buildah or docker with this file.
-- 🧪 Testing structure using [pytest](https://docs.pytest.org/en/latest/)
-- ✅ Code linting using [flake8](https://flake8.pycqa.org/en/latest/)
-- 📊 Code coverage reports using [codecov](https://about.codecov.io/sign-up/)
-- 🛳️ Automatic release to [PyPI](https://pypi.org) using [twine](https://twine.readthedocs.io/en/latest/) and github actions.
-- 🎯 Entry points to execute your program using `python -m <particles_simulation>` or `$ particles_simulation` with basic CLI argument parsing.
-- 🔄 Continuous integration using [Github Actions](.github/workflows/) with jobs to lint, test and release your project on Linux, Mac and Windows environments.
-
-> Curious about architectural decisions on this template? read [ABOUT_THIS_TEMPLATE.md](ABOUT_THIS_TEMPLATE.md)  
-> If you want to contribute to this template please open an [issue](https://github.com/rochacbruno/python-project-template/issues) or fork and send a PULL REQUEST.
-
-[❤️ Sponsor this project](https://github.com/sponsors/rochacbruno/)
-
-<!--  DELETE THE LINES ABOVE THIS AND WRITE YOUR PROJECT README BELOW -->
-
----
 # particles_simulation
 
 [![codecov](https://codecov.io/gh/f-oliva/particles_simulation/branch/main/graph/badge.svg?token=particles_simulation_token_here)](https://codecov.io/gh/f-oliva/particles_simulation)
 [![CI](https://github.com/f-oliva/particles_simulation/actions/workflows/main.yml/badge.svg)](https://github.com/f-oliva/particles_simulation/actions/workflows/main.yml)
 
-Awesome particles_simulation created by f-oliva
+A lightweight particle simulation library with an interactive Arcade renderer. Simulate particles in a bounded box with a leap-frog integrator, with optional support for custom force functions.
 
-## Install it from PyPI
+## Features
 
-```bash
-pip install particles_simulation
-```
+- **Leap-frog integrator**: Symplectic time integration for accurate particle dynamics
+- **Particle system**: Create and manage particles with position, velocity, mass, charge, and radius
+- **Reflective boundaries**: Particles bounce off box walls
+- **Arcade renderer**: Interactive visualization with keyboard controls
+- **Extensible**: Plug in custom force functions for inter-particle interactions
 
-## Usage
+## Installation
 
-```py
-from particles_simulation import BaseClass
-from particles_simulation import base_function
-
-BaseClass().base_method()
-base_function()
-```
+Install from source:
 
 ```bash
-$ python -m particles_simulation
-#or
-$ particles_simulation
+git clone https://github.com/f-oliva/particles_simulation
+cd particles_simulation
+pip install -e .
 ```
+
+## Quick Start
+
+### Interactive Demo
+
+Run the interactive Arcade-based demo:
+
+```bash
+python -m particles_simulation
+# or
+particles_simulation
+```
+
+Options:
+- `--n-particles`: Number of particles (default: 50)
+- `--box-size`: Initial box size (default: 10.0)
+- `--dt`: Integrator timestep (default: 0.01)
+
+### Programmatic Usage
+
+```python
+from particles_simulation.system import Particle, Box, System
+from particles_simulation.integrator import LeapFrogIntegrator
+
+# Create a box and particles
+box = Box(size=10.0)
+system = System(box, n_particles=50)
+particles = system.particles
+
+# Create an integrator
+integrator = LeapFrogIntegrator(
+    box=box,
+    particles=particles,
+    dt=0.01
+)
+
+# Advance the simulation
+integrator.step(n_steps=100)
+
+# Access particle state
+for particle in integrator.particles:
+    print(f"Position: {particle.position}, Velocity: {particle.velocity}")
+```
+
+### With Custom Forces
+
+```python
+import numpy as np
+
+def your_force(particle, all_particles):
+    """Custom force function for particles.
+    
+    Args:
+        particle: Particle to compute force for
+        all_particles: List of all particles in the simulation
+        
+    Returns:
+        np.ndarray: Acceleration vector (force/mass)
+    """
+    # Implement your force calculation here
+    return np.zeros(3)
+
+integrator = LeapFrogIntegrator(
+    box=box,
+    particles=particles,
+    dt=0.01,
+    force_func=your_force
+)
+```
+
+## Arcade Controls
+
+When running the interactive demo:
+
+- **Space**: Pause / resume
+- **A**: Add a random particle
+- **R**: Remove the last particle
+- **Arrow keys**: Pan camera
+- **+/-**: Zoom in / out
+- **[/]**: Shrink / grow box by 10%
 
 ## Development
 
-Read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+Install the project in development mode:
+
+```bash
+pip install -e ".[test]"
+```
+
+Run tests:
+
+```bash
+pytest
+```
+
+Format and lint code with ruff:
+
+```bash
+# Format code
+ruff format src/ 
+
+# Lint code
+ruff check src/
+
+# Lint and fix issues automatically
+ruff check --fix src/
+```
+
+Type checking with mypy:
+
+```bash
+mypy src/particles_simulation/
+```
+
+

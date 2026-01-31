@@ -21,9 +21,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     """
     parser = argparse.ArgumentParser(prog="particles_simulation")
 
-#    parser.add_argument("--version", action="version", version="particles_simulation")
-
-    parser.add_argument("--arcade-demo", action="store_true", help="Run the Arcade-based interactive demo", default=True)
+    parser.add_argument("--no-arcade-demo", action="store_true", help="Skip the Arcade-based interactive demo", default=False)
     parser.add_argument("--n-particles", type=int, default=50, help="Number of particles for the demo")
     parser.add_argument("--box-size", type=float, default=10.0, help="Initial box size for the demo")
     parser.add_argument("--dt", type=float, default=0.01, help="Integrator timestep for the demo")
@@ -31,7 +29,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     args = parser.parse_args(argv)
 
-    if args.arcade_demo:
+    if not args.no_arcade_demo:
         # Support dry-run without importing Arcade so tests and environments
         # without Arcade can still verify CLI behavior.
         if args.dry_run:
@@ -44,7 +42,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         # Import the module lazily to avoid requiring Arcade for other CLI actions
         try:
             from .arcade_renderer import run_arcade_demo
-        except Exception as exc:  # ImportError or other import-time error
+        except (ImportError, ModuleNotFoundError) as exc:
             print("Arcade demo is unavailable: could not import Arcade or renderer module.")
             print(f"Reason: {exc}")
             return 2

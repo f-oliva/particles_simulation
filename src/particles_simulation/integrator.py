@@ -40,7 +40,12 @@ class LeapFrogIntegrator:
 
         # Initialize half-step velocities: v_{n+1/2} = v_n + 0.5 * a_n * dt
         # where a_n is obtained from the force function (may be zero)
-        self.v_half: List[np.ndarray] = [np.asarray(p.velocity, dtype=float) + 0.5 * np.asarray(self.force_func(p, self.particles), dtype=float) * self.dt for p in self.particles]
+        self.v_half: List[np.ndarray] = []
+        for p in self.particles:
+            v_init = np.asarray(p.velocity, dtype=float)
+            a_init = np.asarray(self.force_func(p, self.particles), dtype=float)
+            v_half_init = v_init + 0.5 * a_init * self.dt
+            self.v_half.append(v_half_init)
 
 
     def step(self, n_steps: int = 1) -> None:
@@ -50,15 +55,6 @@ class LeapFrogIntegrator:
         placed exactly at the boundary and the corresponding velocity component
         (half-step velocity) is inverted.
         """
-
-        def detect_wall_collisions(self, p) -> bool:
-            """Detect and return list of (particle_index, axis) tuples for wall collisions."""
-            half = self.box.size / 2
-            for ax in range(3):
-                if p.position[ax]-p.radius < -half[ax] or p.position[ax]+p.radius > half[ax]:
-                    return True
-            return False
-        
         for _ in range(int(n_steps)):
             for i, p in enumerate(self.particles):
                 vh = self.v_half[i]

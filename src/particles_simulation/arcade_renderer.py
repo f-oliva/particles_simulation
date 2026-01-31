@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import math
 import random
-from typing import Optional
+from typing import Optional, List, Dict
 
 import arcade
 import numpy as np
@@ -79,7 +79,7 @@ class ArcadeRenderer(arcade.Window):
 
         # UI buttons (simple clickable rectangles)
         # Each button: {'label': str, 'rect': (x, y, w, h), 'callback': callable}
-        self._buttons: list[dict] = []
+        self._buttons: List[Dict] = []
         self._init_buttons()
 
         # keep a snapshot of initial particles for restart
