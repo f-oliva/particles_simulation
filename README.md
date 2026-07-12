@@ -11,7 +11,7 @@ A lightweight particle simulation library with an interactive Arcade renderer. S
 - **Particle system**: Create and manage particles with position, velocity, mass, charge, and radius
 - **Reflective boundaries**: Particles bounce off box walls
 - **Arcade renderer**: Interactive visualization with keyboard controls
-- **Extensible**: Plug in custom force functions for inter-particle interactions
+- **Extensible**: Plug in custom force-to-acceleration callbacks for inter-particle interactions
 
 ## Design Goals
 This project was created as an exercise focused on:
