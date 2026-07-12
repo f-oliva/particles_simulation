@@ -13,6 +13,23 @@ A lightweight particle simulation library with an interactive Arcade renderer. S
 - **Arcade renderer**: Interactive visualization with keyboard controls
 - **Extensible**: Plug in custom force functions for inter-particle interactions
 
+## Design Goals
+This project was created as an exercise focused on:
+
+- Using classes
+
+- maintainability
+
+- package structure
+
+- testing
+
+- extensibility
+
+- documentation
+
+- reproducibility
+
 ## Installation
 
 Install from source:
