@@ -57,9 +57,6 @@ target-version = "py38"
 select = ["E", "W", "F", "I", "N", "UP", "B"]
 ignore = ["E501"]
 
-[tool.ruff.lint.isort]
-profile = "black"
-
 [tool.mypy]
 python_version = "3.8"
 ignore_missing_imports = true
