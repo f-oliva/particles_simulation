@@ -503,7 +503,7 @@ def run_arcade_demo(
 
     integ = LeapFrogIntegrator(box, ps, dt=dt)
 
-    app = ArcadeRenderer(integ)
+    _app = ArcadeRenderer(integ)
     arcade.run()
 
 
