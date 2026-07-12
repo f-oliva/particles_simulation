@@ -289,7 +289,7 @@ class ArcadeRenderer(arcade.Window):
             self._btn_restart,
         ]
         self._buttons = []
-        for i, (label, cb) in enumerate(zip(labels, callbacks)):
+        for i, (label, cb) in enumerate(zip(labels, callbacks, strict=True)):
             y = y_start - i * (btn_h + padding)
             self._buttons.append(
                 {"label": label, "rect": (x, y, btn_w, btn_h), "callback": cb}
