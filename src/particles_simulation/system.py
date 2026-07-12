@@ -110,7 +110,7 @@ class System:
         # Use provided RNG for reproducibility; fall back to a new Generator.
         self.rng: Generator = rng or default_rng()
 
-    def round2(self, x: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+    def round2(self, x: Union[float, np.ndarray]) -> np.ndarray:
         """Round numbers or arrays to two decimal places."""
         return np.round(x, 2)
 
