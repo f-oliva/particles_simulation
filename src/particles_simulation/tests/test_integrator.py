@@ -95,7 +95,7 @@ def test_integrator_with_constant_force():
     def constant_force(p, all_particles):
         return np.array([1.0, 0.0, 0.0])
 
-    integrator = LeapFrogIntegrator(box, particles, dt=0.01, force_func=constant_force)
+    integrator = LeapFrogIntegrator(box, particles, dt=0.01, force_to_acceleration_func=constant_force)
 
     # After 1 step with a=1.0 and dt=0.01:
     # v_{1} = 0 + 0.5 * 1.0 * 0.01 = 0.005 (at step end)

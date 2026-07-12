@@ -11,33 +11,33 @@ def test_cli_help():
     assert exc_info.value.code == 0
 
 
-def test_cli_default_run_arcade():
-    """Test that default behavior runs arcade demo (dry-run)."""
-    result = main(["--dry-run"])
+def test_cli_demo_dry_run():
+    """Test that the demo command can run in dry-run mode."""
+    result = main(["demo", "--dry-run"])
     assert result == 0
 
 
-def test_cli_no_arcade_demo():
-    """Test --no-arcade-demo flag skips arcade."""
-    result = main(["--no-arcade-demo"])
+def test_cli_no_args_shows_help():
+    """Test that no arguments prints top-level help."""
+    result = main([])
     assert result == 0
 
 
 def test_cli_custom_n_particles():
     """Test custom number of particles argument."""
-    result = main(["--dry-run", "--n-particles", "100"])
+    result = main(["demo", "--dry-run", "--n-particles", "100"])
     assert result == 0
 
 
 def test_cli_custom_box_size():
     """Test custom box size argument."""
-    result = main(["--dry-run", "--box-size", "20.0"])
+    result = main(["demo", "--dry-run", "--box-size", "20.0"])
     assert result == 0
 
 
 def test_cli_custom_dt():
     """Test custom timestep argument."""
-    result = main(["--dry-run", "--dt", "0.001"])
+    result = main(["demo", "--dry-run", "--dt", "0.001"])
     assert result == 0
 
 
@@ -45,6 +45,7 @@ def test_cli_all_custom_args():
     """Test all custom arguments together."""
     result = main(
         [
+            "demo",
             "--dry-run",
             "--n-particles",
             "75",
@@ -66,16 +67,16 @@ def test_cli_no_args():
 def test_cli_invalid_n_particles():
     """Test invalid n-particles type raises error."""
     with pytest.raises(SystemExit):
-        main(["--dry-run", "--n-particles", "not_a_number"])
+        main(["demo", "--dry-run", "--n-particles", "not_a_number"])
 
 
 def test_cli_invalid_box_size():
     """Test invalid box-size type raises error."""
     with pytest.raises(SystemExit):
-        main(["--dry-run", "--box-size", "not_a_number"])
+        main(["demo", "--dry-run", "--box-size", "not_a_number"])
 
 
 def test_cli_invalid_dt():
     """Test invalid dt type raises error."""
     with pytest.raises(SystemExit):
-        main(["--dry-run", "--dt", "not_a_number"])
+        main(["demo", "--dry-run", "--dt", "not_a_number"])

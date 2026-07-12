@@ -280,7 +280,12 @@ class ArcadeRenderer(arcade.Window):
         # reset integrator state
         self.integrator.particles = self.particles
         if hasattr(self.integrator, "v_half"):
-            self.integrator.v_half = [np.asarray(p.velocity, dtype=float) + 0.5 * np.asarray(self.integrator.force_func(p, self.particles), dtype=float) * self.integrator.dt for p in self.particles]
+            self.integrator.v_half = [
+                np.asarray(p.velocity, dtype=float)
+                + 0.5 * np.asarray(self.integrator.force_to_acceleration_func(p, self.particles), dtype=float)
+                * self.integrator.dt
+                for p in self.particles
+            ]
         self.paused = False
         # reset pause button label
         for b in self._buttons:
@@ -351,7 +356,7 @@ class ArcadeRenderer(arcade.Window):
         # Keep integrator internal lists consistent if needed
         if hasattr(self.integrator, "v_half"):
             # compute half-step velocity consistent with integrator's force function
-            a = np.asarray(self.integrator.force_func(p, self.integrator.particles), dtype=float)
+            a = np.asarray(self.integrator.force_to_acceleration_func(p, self.integrator.particles), dtype=float)
             self.integrator.v_half.append(np.asarray(p.velocity) + 0.5 * a * self.integrator.dt)
 
     def _change_box_scale(self, factor: float):

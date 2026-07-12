@@ -9,7 +9,7 @@ description = "A lightweight particle simulation library with an interactive Arc
 readme = "README.md"
 requires-python = ">=3.8"
 authors = [{name = "f-oliva"}]
-license = {text = "MIT"}
+license = {text = "Unlicense"}
 keywords = ["particles", "simulation", "physics"]
 dependencies = [
     "numpy>=1.20",
@@ -30,6 +30,7 @@ Repository = "https://github.com/f-oliva/particles_simulation"
 
 [project.scripts]
 particles_simulation = "particles_simulation.__main__:main"
+particles-sim = "particles_simulation.__main__:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

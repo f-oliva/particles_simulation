@@ -2,7 +2,7 @@
 
 This module provides a lightweight integrator that evolves a collection of
 `Particle` objects inside a `Box` using a leap-frog scheme. For now inter-
-particle forces are ignored by default; a custom `force_func` may be
+particle forces are ignored by default; a custom acceleration callback may be
 provided to compute accelerations (force/mass) given a particle and the
 full particle list.
 """
@@ -11,7 +11,7 @@ import numpy as np
 
 from .system import Box, Particle
 
-ForceFunc = Callable[[Particle, List[Particle]], np.ndarray]
+ForceToAccelerationFunc = Callable[[Particle, List[Particle]], np.ndarray]
 
 
 class LeapFrogIntegrator:
@@ -25,25 +25,27 @@ class LeapFrogIntegrator:
     - box: simulation box used for reflective boundaries
     - particles: list of Particle instances to integrate
     - dt: timestep (float)
-    - force_func: function(particle, particles) -> acceleration vector; if
+    - force_to_acceleration_func: function(particle, particles) -> acceleration vector; if
       omitted, the integrator assumes zero acceleration (no external forces).
     """
 
-    def __init__(self, box: Box, particles: List[Particle], dt: float, force_func: Optional[ForceFunc] = None):
+    def __init__(self, box: Box, particles: List[Particle], dt: float, force_to_acceleration_func: Optional[ForceToAccelerationFunc] = None):
         if dt <= 0:
             raise ValueError("dt must be positive")
         self.box = box
         self.particles = list(particles)
         self.dt = float(dt)
         # Default to zero acceleration if no force function is provided
-        self.force_func: ForceFunc = force_func or (lambda p, ps: np.zeros(3, dtype=float))
+        self.force_to_acceleration_func: ForceToAccelerationFunc = (
+            force_to_acceleration_func or (lambda p, ps: np.zeros(3, dtype=float))
+        )
 
         # Initialize half-step velocities: v_{n+1/2} = v_n + 0.5 * a_n * dt
         # where a_n is obtained from the force function (may be zero)
         self.v_half: List[np.ndarray] = []
         for p in self.particles:
             v_init = np.asarray(p.velocity, dtype=float)
-            a_init = np.asarray(self.force_func(p, self.particles), dtype=float)
+            a_init = np.asarray(self.force_to_acceleration_func(p, self.particles), dtype=float)
             v_half_init = v_init + 0.5 * a_init * self.dt
             self.v_half.append(v_half_init)
 
@@ -71,9 +73,9 @@ class LeapFrogIntegrator:
                     p.velocity[mask] = -p.velocity[mask]
                     # invert integrator's half-step velocity representation
                     vh_old[mask] = -vh_old[mask]
-                # Compute new acceleration (force/mass) using the provided force function
+                # Compute new acceleration (force/mass) using the provided callback
                 # (defaults to zero acceleration when no forces are present).
-                a_new = np.asarray(self.force_func(p, self.particles), dtype=float)
+                a_new = np.asarray(self.force_to_acceleration_func(p, self.particles), dtype=float)
 
                 # Kick: update half-step velocity to v_{n+3/2} = v_{n+1/2} + a_{n+1} * dt
                 vh_new = vh_old + a_new * self.dt

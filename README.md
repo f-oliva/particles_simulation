@@ -30,15 +30,21 @@ pip install -e .
 Run the interactive Arcade-based demo:
 
 ```bash
-python -m particles_simulation
+python -m particles_simulation demo
 # or
-particles_simulation
+particles-sim demo
 ```
 
 Options:
 - `--n-particles`: Number of particles (default: 50)
 - `--box-size`: Initial box size (default: 10.0)
 - `--dt`: Integrator timestep (default: 0.01)
+
+Run top-level help:
+
+```bash
+particles-sim --help
+```
 
 ### Programmatic Usage
 
@@ -48,8 +54,8 @@ from particles_simulation.integrator import LeapFrogIntegrator
 
 # Create a box and particles
 box = Box(size=10.0)
-system = System(box, n_particles=50)
-particles = system.particles
+system = System(box)
+particles = system.create_particles(n_pos=17, n_neg=17, n_neutral=16)
 
 # Create an integrator
 integrator = LeapFrogIntegrator(
@@ -71,11 +77,11 @@ for particle in integrator.particles:
 ```python
 import numpy as np
 
-def your_force(particle, all_particles):
-    """Custom force function for particles.
+def your_force_to_acceleration(particle, all_particles):
+    """Custom force-to-acceleration callback for particles.
     
     Args:
-        particle: Particle to compute force for
+        particle: Particle to compute acceleration for
         all_particles: List of all particles in the simulation
         
     Returns:
@@ -88,7 +94,7 @@ integrator = LeapFrogIntegrator(
     box=box,
     particles=particles,
     dt=0.01,
-    force_func=your_force
+    force_to_acceleration_func=your_force_to_acceleration
 )
 ```
 

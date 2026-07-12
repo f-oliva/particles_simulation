@@ -19,19 +19,18 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     Returns an exit code (0 on success).
     """
-    parser = argparse.ArgumentParser(prog="particles_simulation")
+    parser = argparse.ArgumentParser(prog="particles-sim")
+    subparsers = parser.add_subparsers(dest="command")
 
-    parser.add_argument("--no-arcade-demo", action="store_true", help="Skip the Arcade-based interactive demo", default=False)
-    parser.add_argument("--n-particles", type=int, default=50, help="Number of particles for the demo")
-    parser.add_argument("--box-size", type=float, default=10.0, help="Initial box size for the demo")
-    parser.add_argument("--dt", type=float, default=0.01, help="Integrator timestep for the demo")
-    parser.add_argument("--dry-run", action="store_true", help="Print demo parameters and exit without launching GUI (useful for testing)", default=False, required=False)
+    demo_parser = subparsers.add_parser("demo", help="Run the Arcade demo")
+    demo_parser.add_argument("--n-particles", type=int, default=50, help="Number of particles for the demo")
+    demo_parser.add_argument("--box-size", type=float, default=10.0, help="Initial box size for the demo")
+    demo_parser.add_argument("--dt", type=float, default=0.01, help="Integrator timestep for the demo")
+    demo_parser.add_argument("--dry-run", action="store_true", help="Print demo parameters and exit without launching GUI (useful for testing)", default=False)
 
     args = parser.parse_args(argv)
 
-    if not args.no_arcade_demo:
-        # Support dry-run without importing Arcade so tests and environments
-        # without Arcade can still verify CLI behavior.
+    if args.command == "demo":
         if args.dry_run:
             print("Arcade demo dry-run: parameters")
             print(f"  n_particles: {args.n_particles}")
@@ -39,7 +38,6 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"  dt:          {args.dt}")
             return 0
 
-        # Import the module lazily to avoid requiring Arcade for other CLI actions
         try:
             from .arcade_renderer import run_arcade_demo
         except (ImportError, ModuleNotFoundError) as exc:
@@ -47,11 +45,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"Reason: {exc}")
             return 2
 
-        # Launch the demo (blocking call which opens a native window)
         run_arcade_demo(n_particles=args.n_particles, box_size=args.box_size, dt=args.dt)
         return 0
 
-    # Default behavior: print help
     parser.print_help()
     return 0
 
