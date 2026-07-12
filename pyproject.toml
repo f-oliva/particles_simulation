@@ -20,16 +20,16 @@ keywords = [
     "particle-simulation",
 ]
 dependencies = [
-    "numpy>=1.20",
+    "numpy>=1.26,<2.3",
     "arcade>=2.6",
 ]
 
 [project.optional-dependencies]
 test = [
-    "pytest>=6.0",
-    "pytest-cov>=2.10",
-    "ruff>=0.1.0",
-    "mypy>=0.900",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.8",
+    "mypy>=1.12",
 ]
 
 [project.urls]
