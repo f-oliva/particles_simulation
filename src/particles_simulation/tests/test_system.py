@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.random import default_rng
 
-from particles_simulation.system import Box, System, Particle
+from particles_simulation.system import Box, Particle, System
 
 
 def test_sample_mass_range():
@@ -29,7 +29,13 @@ def test_reproducible_sampling():
 def test_reflective_boundary_corrects_position():
     box = Box(2.0)  # half-size = 1.0
     # place particle outside on +x side with radius 1.0
-    particle = Particle(position=[2.0, 0.0, 0.0], velocity=[1.0, 0.0, 0.0], mass=1.0, charge=0, radius=1.0)
+    particle = Particle(
+        position=[2.0, 0.0, 0.0],
+        velocity=[1.0, 0.0, 0.0],
+        mass=1.0,
+        charge=0,
+        radius=1.0,
+    )
     box.apply_reflective_boundary(particle)
     # corrected position should be at half - radius = 1.0 - 1.0 = 0.0
     assert pytest.approx(particle.position[0]) == 0.0

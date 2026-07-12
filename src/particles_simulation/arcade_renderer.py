@@ -13,20 +13,24 @@ Note: This module is a *demo* and not used in automated tests that run in
 headless CI. It aims to be a friendly starting point for interactive
 experimentation with the integrator and system.
 """
+
 from __future__ import annotations
 
 import math
-import random
-from typing import Optional, List, Dict
+from typing import Dict, List
 
 import arcade
 import numpy as np
 
-from .system import System, Box, Particle
 from .integrator import LeapFrogIntegrator
+from .system import Box, Particle, System
 
 # Colors
-CHARGE_COLOR = {1: arcade.color.RED, -1: arcade.color.BLUE, 0: arcade.color.GRAY}
+CHARGE_COLOR = {
+    1: arcade.color.RED,
+    -1: arcade.color.BLUE,
+    0: arcade.color.GRAY,
+}
 
 
 class ArcadeRenderer(arcade.Window):
@@ -38,7 +42,14 @@ class ArcadeRenderer(arcade.Window):
     - world_scale: pixels per world-unit
     """
 
-    def __init__(self, integrator: LeapFrogIntegrator, width: int = 1200, height: int = 800, title: str = "Particles Simulation", world_scale: float = 40.0):
+    def __init__(
+        self,
+        integrator: LeapFrogIntegrator,
+        width: int = 1200,
+        height: int = 800,
+        title: str = "Particles Simulation",
+        world_scale: float = 40.0,
+    ):
         super().__init__(width, height, title)
         arcade.set_background_color(arcade.color.BLACK)
 
@@ -66,14 +77,18 @@ class ArcadeRenderer(arcade.Window):
         self.rot_x = 0.0  # pitch
         self.rot_y = 0.0  # yaw
         self.rot_z = 0.0  # roll
-        self._rotating_primary = False   # left button -> pitch/yaw
-        self._rotating_secondary = False # right button -> roll
+        self._rotating_primary = False  # left button -> pitch/yaw
+        self._rotating_secondary = False  # right button -> roll
         self._last_mouse_x = 0.0
         self._last_mouse_y = 0.0
         # Rotation sensitivity: radians per pixel moved
         self.rotation_sensitivity = 0.01
         # Camera distance for perspective projection
-        self.camera_distance = float(np.max(self.box.size)) * 2.0 if self.box is not None else 10.0
+        self.camera_distance = (
+            float(np.max(self.box.size)) * 2.0
+            if self.box is not None
+            else 10.0
+        )
         self.min_camera_distance = 0.5
         self.max_camera_distance = 1e6
 
@@ -83,10 +98,21 @@ class ArcadeRenderer(arcade.Window):
         self._init_buttons()
 
         # keep a snapshot of initial particles for restart
-        self._initial_particles = [Particle(position=p.position.copy(), velocity=p.velocity.copy(), mass=p.mass, charge=p.charge, radius=p.radius) for p in self.particles]
+        self._initial_particles = [
+            Particle(
+                position=p.position.copy(),
+                velocity=p.velocity.copy(),
+                mass=p.mass,
+                charge=p.charge,
+                radius=p.radius,
+            )
+            for p in self.particles
+        ]
 
     # --- coordinate transforms -------------------------------------------------
-    def world_to_screen(self, x: float, y: float, z: float = 0.0) -> tuple[float, float, float, float]:
+    def world_to_screen(
+        self, x: float, y: float, z: float = 0.0
+    ) -> tuple[float, float, float, float]:
         """Project a 3D world point to screen coordinates with simple perspective.
 
         Returns (sx, sy, factor, zcam) where `factor` is the perspective scale applied
@@ -121,7 +147,7 @@ class ArcadeRenderer(arcade.Window):
         z3 = z2
 
         # Perspective projection: camera at z = +camera_distance looking toward origin
-        denom = (self.camera_distance - z3)
+        denom = self.camera_distance - z3
         if denom <= 1e-6:
             factor = 1e6
         else:
@@ -148,10 +174,14 @@ class ArcadeRenderer(arcade.Window):
             half = self.box.size / 2
             # eight corners of the box (3D)
             corners = [
-                (-half[0], -half[1], -half[2]), (half[0], -half[1], -half[2]),
-                (half[0], half[1], -half[2]), (-half[0], half[1], -half[2]),
-                (-half[0], -half[1], half[2]), (half[0], -half[1], half[2]),
-                (half[0], half[1], half[2]), (-half[0], half[1], half[2])
+                (-half[0], -half[1], -half[2]),
+                (half[0], -half[1], -half[2]),
+                (half[0], half[1], -half[2]),
+                (-half[0], half[1], -half[2]),
+                (-half[0], -half[1], half[2]),
+                (half[0], -half[1], half[2]),
+                (half[0], half[1], half[2]),
+                (-half[0], half[1], half[2]),
             ]
             pts = [self.world_to_screen(x, y, z) for x, y, z in corners]
             # get z (camera-space depth) for each corner
@@ -160,9 +190,18 @@ class ArcadeRenderer(arcade.Window):
 
             # edges to draw
             edges = [
-                (0, 1), (1, 2), (2, 3), (3, 0),  # back face
-                (4, 5), (5, 6), (6, 7), (7, 4),  # front face
-                (0, 4), (1, 5), (2, 6), (3, 7)   # side edges
+                (0, 1),
+                (1, 2),
+                (2, 3),
+                (3, 0),  # back face
+                (4, 5),
+                (5, 6),
+                (6, 7),
+                (7, 4),  # front face
+                (0, 4),
+                (1, 5),
+                (2, 6),
+                (3, 7),  # side edges
             ]
             for a, b in edges:
                 x0, y0 = pts_xy[a]
@@ -172,7 +211,9 @@ class ArcadeRenderer(arcade.Window):
 
         # Particles
         for p in self.particles:
-            sx, sy, factor, zcam = self.world_to_screen(p.position[0], p.position[1], p.position[2])
+            sx, sy, factor, zcam = self.world_to_screen(
+                p.position[0], p.position[1], p.position[2]
+            )
             r = max(1.0, p.radius * self.zoom * factor)
             color = CHARGE_COLOR.get(int(p.charge), arcade.color.WHITE)
             draw_items.append((zcam, "particle", (sx, sy, r, color)))
@@ -194,14 +235,20 @@ class ArcadeRenderer(arcade.Window):
         rot_z_deg = math.degrees(self.rot_z)
         arcade.draw_text(
             f"{paused_text}  Particles: {len(self.particles)}  Zoom: {self.zoom:.1f}  Rot(X/Y/Z): {rot_x_deg:.0f}/{rot_y_deg:.0f}/{rot_z_deg:.0f}°  CamDist: {self.camera_distance:.1f}",
-            10, 40, arcade.color.WHITE, self.hud_font_size
+            10,
+            40,
+            arcade.color.WHITE,
+            self.hud_font_size,
         )
 
         # Draw UI buttons
         self._draw_buttons()
+
     def on_mouse_press(self, x: float, y: float, button: int, modifiers: int):
         # Check UI buttons first (clicks on buttons should not start rotations)
-        if button == arcade.MOUSE_BUTTON_LEFT and self._handle_button_click(x, y):
+        if button == arcade.MOUSE_BUTTON_LEFT and self._handle_button_click(
+            x, y
+        ):
             return
 
         if button == arcade.MOUSE_BUTTON_LEFT:
@@ -213,7 +260,9 @@ class ArcadeRenderer(arcade.Window):
             self._last_mouse_x = x
             self._last_mouse_y = y
 
-    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
+    def on_mouse_release(
+        self, x: float, y: float, button: int, modifiers: int
+    ):
         if button == arcade.MOUSE_BUTTON_LEFT:
             self._rotating_primary = False
         elif button == arcade.MOUSE_BUTTON_RIGHT:
@@ -227,12 +276,24 @@ class ArcadeRenderer(arcade.Window):
         x = 10 + btn_w / 2
         # Start near top-left under HUD text and stack vertically
         y_start = self.height - 60
-        labels = ["Add Particle", "Remove Particle", "Pause Simulation", "Restart Simulation"]
-        callbacks = [self._btn_add, self._btn_remove, self._btn_pause_toggle, self._btn_restart]
+        labels = [
+            "Add Particle",
+            "Remove Particle",
+            "Pause Simulation",
+            "Restart Simulation",
+        ]
+        callbacks = [
+            self._btn_add,
+            self._btn_remove,
+            self._btn_pause_toggle,
+            self._btn_restart,
+        ]
         self._buttons = []
         for i, (label, cb) in enumerate(zip(labels, callbacks)):
             y = y_start - i * (btn_h + padding)
-            self._buttons.append({"label": label, "rect": (x, y, btn_w, btn_h), "callback": cb})
+            self._buttons.append(
+                {"label": label, "rect": (x, y, btn_w, btn_h), "callback": cb}
+            )
 
     def _draw_buttons(self):
         for b in self._buttons:
@@ -246,13 +307,20 @@ class ArcadeRenderer(arcade.Window):
             # text positioned with small padding from left and vertically centered
             text_x = lx + 6
             text_y = ly + h / 2 - 6
-            arcade.draw_text(b["label"], text_x, text_y, arcade.color.WHITE, 12)
+            arcade.draw_text(
+                b["label"], text_x, text_y, arcade.color.WHITE, 12
+            )
 
     def _handle_button_click(self, sx: float, sy: float) -> bool:
         # arcade's origin is bottom-left; our rects are centered at (x,y)
         for b in self._buttons:
             x, y, w, h = b["rect"]
-            if (sx >= x - w / 2 and sx <= x + w / 2 and sy >= y - h / 2 and sy <= y + h / 2):
+            if (
+                sx >= x - w / 2
+                and sx <= x + w / 2
+                and sy >= y - h / 2
+                and sy <= y + h / 2
+            ):
                 b["callback"]()
                 return True
         return False
@@ -276,13 +344,28 @@ class ArcadeRenderer(arcade.Window):
 
     def _btn_restart(self):
         # Restore initial snapshot
-        self.particles[:] = [Particle(position=p.position.copy(), velocity=p.velocity.copy(), mass=p.mass, charge=p.charge, radius=p.radius) for p in self._initial_particles]
+        self.particles[:] = [
+            Particle(
+                position=p.position.copy(),
+                velocity=p.velocity.copy(),
+                mass=p.mass,
+                charge=p.charge,
+                radius=p.radius,
+            )
+            for p in self._initial_particles
+        ]
         # reset integrator state
         self.integrator.particles = self.particles
         if hasattr(self.integrator, "v_half"):
             self.integrator.v_half = [
                 np.asarray(p.velocity, dtype=float)
-                + 0.5 * np.asarray(self.integrator.force_to_acceleration_func(p, self.particles), dtype=float)
+                + 0.5
+                * np.asarray(
+                    self.integrator.force_to_acceleration_func(
+                        p, self.particles
+                    ),
+                    dtype=float,
+                )
                 * self.integrator.dt
                 for p in self.particles
             ]
@@ -292,7 +375,15 @@ class ArcadeRenderer(arcade.Window):
             if b["callback"] is self._btn_pause_toggle:
                 b["label"] = "Pause"
 
-    def on_mouse_drag(self, x: float, y: float, dx: float, dy: float, buttons: int, modifiers: int):
+    def on_mouse_drag(
+        self,
+        x: float,
+        y: float,
+        dx: float,
+        dy: float,
+        buttons: int,
+        modifiers: int,
+    ):
         # Primary (left) drag -> pitch (x) by dy, yaw (y) by dx
         if buttons & arcade.MOUSE_BUTTON_LEFT and self._rotating_primary:
             self.rot_y += dx * self.rotation_sensitivity
@@ -307,11 +398,19 @@ class ArcadeRenderer(arcade.Window):
         self._last_mouse_x = x
         self._last_mouse_y = y
 
-    def on_mouse_scroll(self, x: float, y: float, scroll_x: float, scroll_y: float):
+    def on_mouse_scroll(
+        self, x: float, y: float, scroll_x: float, scroll_y: float
+    ):
         # Use scroll to adjust camera distance (zoom equivalent in 3D)
         # scroll_y > 0 means scroll up -> zoom in
         factor = 0.9 ** (-scroll_y)
-        self.camera_distance = float(np.clip(self.camera_distance * factor, self.min_camera_distance, self.max_camera_distance))
+        self.camera_distance = float(
+            np.clip(
+                self.camera_distance * factor,
+                self.min_camera_distance,
+                self.max_camera_distance,
+            )
+        )
 
     def on_update(self, delta_time: float):
         # Advance simulation by one step per update when running
@@ -356,8 +455,15 @@ class ArcadeRenderer(arcade.Window):
         # Keep integrator internal lists consistent if needed
         if hasattr(self.integrator, "v_half"):
             # compute half-step velocity consistent with integrator's force function
-            a = np.asarray(self.integrator.force_to_acceleration_func(p, self.integrator.particles), dtype=float)
-            self.integrator.v_half.append(np.asarray(p.velocity) + 0.5 * a * self.integrator.dt)
+            a = np.asarray(
+                self.integrator.force_to_acceleration_func(
+                    p, self.integrator.particles
+                ),
+                dtype=float,
+            )
+            self.integrator.v_half.append(
+                np.asarray(p.velocity) + 0.5 * a * self.integrator.dt
+            )
 
     def _change_box_scale(self, factor: float):
         if self.box is None:
@@ -379,7 +485,9 @@ class ArcadeRenderer(arcade.Window):
                     p.position[i] = half[i]
 
 
-def run_arcade_demo(n_particles: int = 50, box_size: float = 10.0, dt: float = 0.01):
+def run_arcade_demo(
+    n_particles: int = 50, box_size: float = 10.0, dt: float = 0.01
+):
     """Convenience function to run a demo app using Arcade.
 
     This creates a `System`, a `LeapFrogIntegrator`, populates initial
@@ -387,7 +495,11 @@ def run_arcade_demo(n_particles: int = 50, box_size: float = 10.0, dt: float = 0
     """
     box = Box(box_size)
     s = System(box, rng=None)
-    ps = s.create_particles(n_pos=n_particles // 3, n_neg=n_particles // 3, n_neutral=n_particles - 2*(n_particles // 3))
+    ps = s.create_particles(
+        n_pos=n_particles // 3,
+        n_neg=n_particles // 3,
+        n_neutral=n_particles - 2 * (n_particles // 3),
+    )
 
     integ = LeapFrogIntegrator(box, ps, dt=dt)
 

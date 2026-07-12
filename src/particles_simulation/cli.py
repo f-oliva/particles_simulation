@@ -4,10 +4,11 @@ This lightweight CLI provides a small entry-point to run demos such as
 an Arcade-based interactive renderer. The CLI is intentionally minimal
 and should be extended as needed.
 """
+
 from __future__ import annotations
 
-from typing import List, Optional
 import argparse
+from typing import List, Optional
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -23,10 +24,30 @@ def main(argv: Optional[List[str]] = None) -> int:
     subparsers = parser.add_subparsers(dest="command")
 
     demo_parser = subparsers.add_parser("demo", help="Run the Arcade demo")
-    demo_parser.add_argument("--n-particles", type=int, default=50, help="Number of particles for the demo")
-    demo_parser.add_argument("--box-size", type=float, default=10.0, help="Initial box size for the demo")
-    demo_parser.add_argument("--dt", type=float, default=0.01, help="Integrator timestep for the demo")
-    demo_parser.add_argument("--dry-run", action="store_true", help="Print demo parameters and exit without launching GUI (useful for testing)", default=False)
+    demo_parser.add_argument(
+        "--n-particles",
+        type=int,
+        default=50,
+        help="Number of particles for the demo",
+    )
+    demo_parser.add_argument(
+        "--box-size",
+        type=float,
+        default=10.0,
+        help="Initial box size for the demo",
+    )
+    demo_parser.add_argument(
+        "--dt",
+        type=float,
+        default=0.01,
+        help="Integrator timestep for the demo",
+    )
+    demo_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print demo parameters and exit without launching GUI (useful for testing)",
+        default=False,
+    )
 
     args = parser.parse_args(argv)
 
@@ -41,11 +62,15 @@ def main(argv: Optional[List[str]] = None) -> int:
         try:
             from .arcade_renderer import run_arcade_demo
         except (ImportError, ModuleNotFoundError) as exc:
-            print("Arcade demo is unavailable: could not import Arcade or renderer module.")
+            print(
+                "Arcade demo is unavailable: could not import Arcade or renderer module."
+            )
             print(f"Reason: {exc}")
             return 2
 
-        run_arcade_demo(n_particles=args.n_particles, box_size=args.box_size, dt=args.dt)
+        run_arcade_demo(
+            n_particles=args.n_particles, box_size=args.box_size, dt=args.dt
+        )
         return 0
 
     parser.print_help()

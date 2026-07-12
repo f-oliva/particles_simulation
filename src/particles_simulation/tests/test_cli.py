@@ -1,6 +1,7 @@
 """Tests for the command-line interface."""
 
 import pytest
+
 from particles_simulation.cli import main
 
 

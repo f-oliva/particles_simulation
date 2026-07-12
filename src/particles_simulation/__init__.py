@@ -1,7 +1,7 @@
 """Particle simulation library with physics integration and visualization."""
 
-from .system import Particle, Box, System
 from .integrator import LeapFrogIntegrator
+from .system import Box, Particle, System
 
 __all__ = [
     "Particle",

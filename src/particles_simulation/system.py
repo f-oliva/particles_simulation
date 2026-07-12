@@ -6,7 +6,8 @@ example CLI: Particle, Box and System (particle generation).
 """
 
 from dataclasses import dataclass, field
-from typing import Sequence, Union, List, Optional
+from typing import List, Optional, Sequence, Union
+
 import numpy as np
 from numpy.random import Generator, default_rng
 
@@ -18,6 +19,7 @@ class Particle:
     The dataclass ensures concise semantics and easier comparisons in
     tests. Vector fields are normalized to numpy arrays of shape (3,).
     """
+
     position: np.ndarray = field(repr=True)
     velocity: np.ndarray = field(repr=True)
     mass: float = field(repr=True)
@@ -45,7 +47,9 @@ class Box:
         if sizes.size == 1:
             sizes = np.repeat(sizes.item(), 3)
         if sizes.shape != (3,):
-            raise ValueError("size must be a scalar or a sequence of three positive numbers")
+            raise ValueError(
+                "size must be a scalar or a sequence of three positive numbers"
+            )
         if np.any(sizes <= 0):
             raise ValueError("box sizes must be positive")
         self.size = sizes
@@ -95,7 +99,12 @@ class System:
     make sampling deterministic and thread-safe for tests.
     """
 
-    def __init__(self, box: Box, temperature: float = 300.0, rng: Optional[Generator] = None):
+    def __init__(
+        self,
+        box: Box,
+        temperature: float = 300.0,
+        rng: Optional[Generator] = None,
+    ):
         self.box = box
         self.temperature = float(temperature)
         # Use provided RNG for reproducibility; fall back to a new Generator.
@@ -128,7 +137,7 @@ class System:
         v = self.rng.uniform(-v_max, v_max, size=3)
         return self.round2(v)
 
-    def create_particle(self, charge:Optional[int] = None) -> Particle:
+    def create_particle(self, charge: Optional[int] = None) -> Particle:
         """Create a single Particle using the System sampling routines.
 
         If `charge` is None, a charge is sampled randomly from {-1, 0, 1}
@@ -142,13 +151,19 @@ class System:
         velocity = self.sample_velocity()
         return Particle(position, velocity, mass, charge, radius)
 
-    def create_particles(self, n_pos:int, n_neg:int, n_neutral:int) -> List[Particle]:
+    def create_particles(
+        self, n_pos: int, n_neg: int, n_neutral: int
+    ) -> List[Particle]:
         """Create a list of particles with specified charge counts.
 
         Counts must be non-negative integers. Returns a list of Particle
         instances created with sampled properties.
         """
-        for name, value in ("n_pos", n_pos), ("n_neg", n_neg), ("n_neutral", n_neutral):
+        for name, value in (
+            ("n_pos", n_pos),
+            ("n_neg", n_neg),
+            ("n_neutral", n_neutral),
+        ):
             if not isinstance(value, int) or value < 0:
                 raise ValueError(f"{name} must be a non-negative integer")
 
@@ -162,4 +177,3 @@ class System:
             particles.append(self.create_particle(charge=0))
 
         return particles
-

@@ -6,7 +6,9 @@ particle forces are ignored by default; a custom acceleration callback may be
 provided to compute accelerations (force/mass) given a particle and the
 full particle list.
 """
+
 from typing import Callable, List, Optional
+
 import numpy as np
 
 from .system import Box, Particle
@@ -29,7 +31,13 @@ class LeapFrogIntegrator:
       omitted, the integrator assumes zero acceleration (no external forces).
     """
 
-    def __init__(self, box: Box, particles: List[Particle], dt: float, force_to_acceleration_func: Optional[ForceToAccelerationFunc] = None):
+    def __init__(
+        self,
+        box: Box,
+        particles: List[Particle],
+        dt: float,
+        force_to_acceleration_func: Optional[ForceToAccelerationFunc] = None,
+    ):
         if dt <= 0:
             raise ValueError("dt must be positive")
         self.box = box
@@ -37,7 +45,8 @@ class LeapFrogIntegrator:
         self.dt = float(dt)
         # Default to zero acceleration if no force function is provided
         self.force_to_acceleration_func: ForceToAccelerationFunc = (
-            force_to_acceleration_func or (lambda p, ps: np.zeros(3, dtype=float))
+            force_to_acceleration_func
+            or (lambda p, ps: np.zeros(3, dtype=float))
         )
 
         # Initialize half-step velocities: v_{n+1/2} = v_n + 0.5 * a_n * dt
@@ -45,10 +54,11 @@ class LeapFrogIntegrator:
         self.v_half: List[np.ndarray] = []
         for p in self.particles:
             v_init = np.asarray(p.velocity, dtype=float)
-            a_init = np.asarray(self.force_to_acceleration_func(p, self.particles), dtype=float)
+            a_init = np.asarray(
+                self.force_to_acceleration_func(p, self.particles), dtype=float
+            )
             v_half_init = v_init + 0.5 * a_init * self.dt
             self.v_half.append(v_half_init)
-
 
     def step(self, n_steps: int = 1) -> None:
         """Advance the simulation `n_steps` steps using leap-frog.
@@ -75,7 +85,10 @@ class LeapFrogIntegrator:
                     vh_old[mask] = -vh_old[mask]
                 # Compute new acceleration (force/mass) using the provided callback
                 # (defaults to zero acceleration when no forces are present).
-                a_new = np.asarray(self.force_to_acceleration_func(p, self.particles), dtype=float)
+                a_new = np.asarray(
+                    self.force_to_acceleration_func(p, self.particles),
+                    dtype=float,
+                )
 
                 # Kick: update half-step velocity to v_{n+3/2} = v_{n+1/2} + a_{n+1} * dt
                 vh_new = vh_old + a_new * self.dt

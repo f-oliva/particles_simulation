@@ -2,10 +2,9 @@
 
 import numpy as np
 import pytest
-from numpy.random import default_rng
 
-from particles_simulation.system import Box, System, Particle
 from particles_simulation.integrator import LeapFrogIntegrator
+from particles_simulation.system import Box, Particle
 
 
 def test_integrator_initialization():
@@ -95,7 +94,9 @@ def test_integrator_with_constant_force():
     def constant_force(p, all_particles):
         return np.array([1.0, 0.0, 0.0])
 
-    integrator = LeapFrogIntegrator(box, particles, dt=0.01, force_to_acceleration_func=constant_force)
+    integrator = LeapFrogIntegrator(
+        box, particles, dt=0.01, force_to_acceleration_func=constant_force
+    )
 
     # After 1 step with a=1.0 and dt=0.01:
     # v_{1} = 0 + 0.5 * 1.0 * 0.01 = 0.005 (at step end)
@@ -119,7 +120,9 @@ def test_integrator_reflective_boundary():
     integrator.step(1)
 
     # Particle should be near boundary and velocity should be reversed
-    assert particle.position[0] <= 1.0 - 0.1  # Within bounds accounting for radius
+    assert (
+        particle.position[0] <= 1.0 - 0.1
+    )  # Within bounds accounting for radius
     assert particle.velocity[0] < 0  # Bounced back
 
 
@@ -142,9 +145,9 @@ def test_integrator_energy_conservation_no_forces():
     integrator = LeapFrogIntegrator(box, particles, dt=0.01)
 
     # Kinetic energy should be conserved
-    initial_ke = 0.5 * 2.0 * np.sum(particle.velocity ** 2)
+    initial_ke = 0.5 * 2.0 * np.sum(particle.velocity**2)
 
     integrator.step(100)
 
-    final_ke = 0.5 * 2.0 * np.sum(particle.velocity ** 2)
+    final_ke = 0.5 * 2.0 * np.sum(particle.velocity**2)
     assert np.allclose(initial_ke, final_ke, rtol=1e-10)
