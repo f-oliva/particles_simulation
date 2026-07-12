@@ -60,9 +60,9 @@ def test_cli_all_custom_args():
 
 
 def test_cli_no_args():
-    """Test that no arguments shows help."""
-    with pytest.raises(SystemExit):
-        main([])
+    """Test that no arguments prints top-level help."""
+    result = main([])
+    assert result == 0
 
 
 def test_cli_invalid_n_particles():
